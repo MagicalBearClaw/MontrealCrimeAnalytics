@@ -59,9 +59,8 @@ class CrimeGridInfo:
         df['cell'] = df.index
         return df
 
-    def is_cell_blocked(self, cell: Tuple[float, float], max_threshold: int) -> bool:
-        df = self._data_frame.loc[self._data_frame['cell'] == cell]
-        return df["count"][0] >= max_threshold
+    def generate_grid_dict(self, grid: np.array):
+        return dict(((j, i), grid[i][j]) for i in range(len(grid)) for j in range(len(grid[0])))
 
     def generate_grid(self, threshold_percentage: int) -> Tuple[np.array, GridTopology]:
         # returns the modified data frame where the index is the cell coordinates(x, y) with the crime count as a column
@@ -85,7 +84,7 @@ class CrimeGridInfo:
 
         # create the topology information of the grid
         grid_topology = GridTopology(self.bounding_box, crime_count_threshold,
-                                     max_crime_count, self.grid_resolution)
+                                     max_crime_count, self.grid_resolution, self.bin_dimensions)
 
         return grid, grid_topology
 

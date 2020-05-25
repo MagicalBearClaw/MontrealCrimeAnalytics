@@ -15,6 +15,8 @@ from src.CrimeRateGridGenerator import CrimeRateInfoGenerator
 from matplotlib.lines import Line2D
 import matplotlib.patches as patches
 
+from src.CrimeStatisticCalculator import CrimeStatisticCalculator
+
 
 class CrimeRateAnalyticUI:
 
@@ -28,6 +30,11 @@ class CrimeRateAnalyticUI:
         self.crime_grid_info = None
         self._grid_topology = None
         self._grid = None
+        self._start_path_circle = None
+        self._end_path_circle = None
+        self._grid_dict = None
+        self._console_text = None
+        self._console_text_data = ""
 
     def start_application(self) -> None:
         self.crime_grid_info = self._crime_rate_info_generator.create_crime_grid_info(self._default_grid_resolution)
@@ -45,7 +52,8 @@ class CrimeRateAnalyticUI:
         self._im: AxesImage = self._plot.imshow(grid, interpolation='none', aspect='equal', origin='lower')
         self.__load(grid, threshold, max_count, extents)
         self.__create_widgets()
-        self._fig.canvas.mpl_connect('button_press_event', self.__on_click)
+        self._fig.canvas.mpl_connect('button_press_event', self.__on_grid_click)
+        self.__display_statistics(grid.flatten())
         plt.show()
 
     def __load(self, grid: np.array, threshold: int, max_count: int, extents: np.array) -> None:
@@ -56,6 +64,7 @@ class CrimeRateAnalyticUI:
         self._im.set_extent(extents)
         self._im.set_cmap(cmap)
         self._im.set_norm(norm)
+        self._grid_dict = self.crime_grid_info.generate_grid_dict(grid)
 
     def __create_widgets(self) -> None:
         self.__create_slider_widget()
@@ -76,6 +85,14 @@ class CrimeRateAnalyticUI:
         self._threshold_slider: plt.Slider = Slider(self.threshold_axes, 'Threshold:', 0.0, 100.0, valinit=50,
                                                     valstep=1.0, orientation='vertical', color='purple')
 
+    def __display_statistics(self, data: np.ndarray) -> None:
+        statistic_calculator = CrimeStatisticCalculator(data)
+        self._console_text_data = f'The mean is {statistic_calculator.calculate_mean()} \n' \
+                                  f'The median is {statistic_calculator.calculate_median()} \n' \
+                                  f'The standard deviation is {statistic_calculator.calculate_std()} \n'
+
+        self._console_text.set_text(self._console_text_data)
+
     def __create_grid_resolution_input(self) -> None:
         res_x, res_y = self._default_grid_resolution
         self._grid_x_axes_text_Box = plt.axes([0.35, 0.295, 0.15, 0.020])
@@ -88,7 +105,7 @@ class CrimeRateAnalyticUI:
         text_axes.set_axis_off()
         r = patches.Rectangle((0, 0), 1, 1, facecolor='black')
         text_axes.add_artist(r)
-        self._console_text = text_axes.annotate('', (0.02, 0.85), color='white')
+        self._console_text = text_axes.annotate(self._console_text_data, (0.02, 0.70), color='white')
 
     def __reset(self, event) -> None:
         self._threshold_slider.set_val(self._default_threshold_percentage)
@@ -97,6 +114,11 @@ class CrimeRateAnalyticUI:
         self._grid_y_text_box.set_val(str(res_y))
         self._console_text.set_text('')
         self.__update_grid(self._default_grid_resolution, self._default_threshold_percentage)
+        if self._start_path_circle is not None:
+            self._start_path_circle.remove()
+        if self._end_path_circle is not None:
+            self._end_path_circle.remove()
+        self.__display_statistics(self._grid.flatten())
         self._fig.canvas.draw()
 
     def __update(self, event) -> None:
@@ -111,6 +133,7 @@ class CrimeRateAnalyticUI:
             self._grid_y_text_box.set_val(str(res_y))
 
         self.__update_grid(grid_resolution, int(self._threshold_slider.val))
+        self.__display_statistics(self._grid.flatten())
         self._fig.canvas.draw()
 
     def __update_grid(self, grid_resolution: Tuple[float, float], threshold: int) -> None:
@@ -122,14 +145,81 @@ class CrimeRateAnalyticUI:
     def __find_path(self, event) -> None:
         pass
 
-    def __on_click(self, event) -> None:
-        print(event)
+    def __calculate_distance_between_points(self, p1: Tuple[float, float], p2: Tuple[float, float]) -> float:
+        x1, y1 = p1
+        x2, y2 = p2
+        return ((x2 - x1) ** 2) + ((y2 - y1) ** 2)
+
+    def __calculate_coordinates_from_cell(self, cell: Tuple[int, int], raw_point: Tuple[float, float]) \
+            -> Tuple[float, float]:
+        x, y = cell
+        res_x, res_y = self._grid_topology.grid_resolution
+        x_min, y_min = self._grid_topology.bounding_box[0], self._grid_topology.bounding_box[1]
+
+        left_bottom_corner_x = x_min + ((x) * res_x)
+        left_bottom_corner_y = y_min + ((y) * res_y)
+
+        right_bottom_corner_x = x_min + ((x + 1) * res_x)
+        right_bottom_corner_y = y_min + ((y) * res_y)
+
+        left_top_corner_x = x_min + ((x) * res_x)
+        left_top_corner_y = y_min + ((y + 1) * res_y)
+
+        right_top_corner_x = x_min + ((x + 1) * res_x)
+        right_top_corner_y = y_min + ((y + 1) * res_y)
+
+        coordinates_dict = dict()
+        coordinates_dict[0] = (left_bottom_corner_x, left_bottom_corner_y)
+        coordinates_dict[1] = (right_bottom_corner_x, right_bottom_corner_y)
+        coordinates_dict[2] = (left_top_corner_x, left_top_corner_y)
+        coordinates_dict[3] = (right_top_corner_x, right_top_corner_y)
+
+        left_bottom_distance = self.__calculate_distance_between_points(coordinates_dict[0],
+                                                                        raw_point)
+        right_bottom_distance = self.__calculate_distance_between_points(coordinates_dict[1],
+                                                                         raw_point)
+        left_top_distance = self.__calculate_distance_between_points(coordinates_dict[2],
+                                                                     raw_point)
+        right_top_distance = self.__calculate_distance_between_points(coordinates_dict[3],
+                                                                      raw_point)
+
+        shortest_distance_index = np.argmin([left_bottom_distance, right_bottom_distance, left_top_distance,
+                                             right_top_distance])
+
+        return coordinates_dict[shortest_distance_index]
+
+    def __is_cell_blocked(self, cell: Tuple[int, int], threshold: int):
+        return self._grid_dict[cell] >= threshold
+
+    def __on_grid_click(self, event) -> None:
+        axes = event.inaxes
+        if self._plot != axes:
+            return None
+
         x_cord, y_cord = event.xdata, event.ydata
         cell_x, cell_y = cell = self.crime_grid_info.get_cell_from_point((x_cord, y_cord))
-        print(f'cell_x: {cell_x}, cell_y: {cell_y}')
-        is_blocked = self.crime_grid_info.is_cell_blocked(cell, self._grid_topology.threshold)
+        is_blocked = self.__is_cell_blocked(cell, self._grid_topology.threshold)
         if not is_blocked:
-            if self._start_node_id != -1:
-                pass
+            # calculate the nearest corner to place our start or end point
+            cord = self.__calculate_coordinates_from_cell(cell, (x_cord, y_cord))
+
+            if self._start_node_id != -1 and self._end_node_id != -1:
+                self._start_path_circle.remove()
+                self._end_path_circle.remove()
+                self._start_path_circle: plt.Circle = plt.Circle(cord, 0.00025, color='green', clip_on=False)
+                self._plot.add_artist(self._start_path_circle)
+                self._end_node_id = -1
+                self._start_node_id = 1
+            elif self._start_node_id != -1:
+                self._end_path_circle: plt.Circle = plt.Circle(cord, 0.00025, color='red', clip_on=False)
+                end_center = self._end_path_circle.get_center()
+                start_center = self._start_path_circle.get_center()
+                if end_center == start_center:
+                    return None
+                self._plot.add_artist(self._end_path_circle)
+                self._end_node_id = 1
             else:
-                pass
+                self._start_path_circle: plt.Circle = plt.Circle(cord, 0.00025, color='green', clip_on=False)
+                self._plot.add_artist(self._start_path_circle)
+                self._start_node_id = 1
+            self._fig.canvas.draw()
