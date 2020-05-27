@@ -16,6 +16,7 @@ from matplotlib.lines import Line2D
 import matplotlib.patches as patches
 
 from src.CrimeStatisticCalculator import CrimeStatisticCalculator
+from src.DisconnectedGraph import DisconnectedGraph
 
 
 class CrimeRateAnalyticUI:
@@ -35,10 +36,13 @@ class CrimeRateAnalyticUI:
         self._grid_dict = None
         self._console_text = None
         self._console_text_data = ""
+        self._disconnected_graph = None
 
     def start_application(self) -> None:
         self.crime_grid_info = self._crime_rate_info_generator.create_crime_grid_info(self._default_grid_resolution)
         self._grid, self._grid_topology = self.crime_grid_info.generate_grid(self._default_threshold_percentage)
+        self._disconnected_graph = DisconnectedGraph(self._grid, self._grid_topology)
+        self._disconnected_graph.build_graph_from_grid()
         self.__display(self._grid, self._grid_topology.calculate_extents(), self._grid_topology.threshold,
                        self._grid_topology.max_crime_count, 0)
 
@@ -64,7 +68,7 @@ class CrimeRateAnalyticUI:
         self._im.set_extent(extents)
         self._im.set_cmap(cmap)
         self._im.set_norm(norm)
-        self._grid_dict = self.crime_grid_info.generate_grid_dict(grid)
+        self._grid_dict = self.crime_grid_info.generate_grid_dict(grid, threshold)
 
     def __create_widgets(self) -> None:
         self.__create_slider_widget()
@@ -81,9 +85,10 @@ class CrimeRateAnalyticUI:
         self._path_btn.on_clicked(self.__find_path)
 
     def __create_slider_widget(self) -> None:
-        self.threshold_axes = plt.axes([0.80, 0.35, 0.03, 0.53], facecolor='yellow')
-        self._threshold_slider: plt.Slider = Slider(self.threshold_axes, 'Threshold:', 0.0, 100.0, valinit=50,
-                                                    valstep=1.0, orientation='vertical', color='purple')
+        self.threshold_axes = plt.axes([0.80, 0.35, 0.03, 0.53], facecolor='purple')
+        self._threshold_slider: plt.Slider = Slider(self.threshold_axes, 'Threshold:', 0.0, 100.0,
+                                                    valinit=self._default_threshold_percentage,
+                                                    valstep=1.0, orientation='vertical', color='yellow')
 
     def __display_statistics(self, data: np.ndarray) -> None:
         statistic_calculator = CrimeStatisticCalculator(data)
@@ -139,6 +144,8 @@ class CrimeRateAnalyticUI:
     def __update_grid(self, grid_resolution: Tuple[float, float], threshold: int) -> None:
         self.crime_grid_info = self._crime_rate_info_generator.create_crime_grid_info(grid_resolution)
         self._grid, self._grid_topology = self.crime_grid_info.generate_grid(threshold)
+        self._disconnected_graph = DisconnectedGraph(self._grid, self._grid_topology)
+        self._disconnected_graph.build_graph_from_grid()
         self.__load(self._grid, self._grid_topology.threshold, self._grid_topology.max_crime_count,
                     self._grid_topology.calculate_extents())
 
@@ -156,13 +163,13 @@ class CrimeRateAnalyticUI:
         res_x, res_y = self._grid_topology.grid_resolution
         x_min, y_min = self._grid_topology.bounding_box[0], self._grid_topology.bounding_box[1]
 
-        left_bottom_corner_x = x_min + ((x) * res_x)
-        left_bottom_corner_y = y_min + ((y) * res_y)
+        left_bottom_corner_x = x_min + (x * res_x)
+        left_bottom_corner_y = y_min + (y * res_y)
 
         right_bottom_corner_x = x_min + ((x + 1) * res_x)
-        right_bottom_corner_y = y_min + ((y) * res_y)
+        right_bottom_corner_y = y_min + (y * res_y)
 
-        left_top_corner_x = x_min + ((x) * res_x)
+        left_top_corner_x = x_min + (x * res_x)
         left_top_corner_y = y_min + ((y + 1) * res_y)
 
         right_top_corner_x = x_min + ((x + 1) * res_x)
@@ -188,8 +195,7 @@ class CrimeRateAnalyticUI:
 
         return coordinates_dict[shortest_distance_index]
 
-    def __is_cell_blocked(self, cell: Tuple[int, int], threshold: int):
-        return self._grid_dict[cell] >= threshold
+
 
     def __on_grid_click(self, event) -> None:
         axes = event.inaxes
@@ -197,8 +203,8 @@ class CrimeRateAnalyticUI:
             return None
 
         x_cord, y_cord = event.xdata, event.ydata
-        cell_x, cell_y = cell = self.crime_grid_info.get_cell_from_point((x_cord, y_cord))
-        is_blocked = self.__is_cell_blocked(cell, self._grid_topology.threshold)
+        cell = self.crime_grid_info.get_cell_from_point((x_cord, y_cord))
+        is_blocked = self._grid_dict.get(cell)
         if not is_blocked:
             # calculate the nearest corner to place our start or end point
             cord = self.__calculate_coordinates_from_cell(cell, (x_cord, y_cord))

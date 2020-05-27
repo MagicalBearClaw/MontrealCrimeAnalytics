@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from src.GridTopology import GridTopology
-from typing import Tuple, List
+from typing import Tuple, List, Iterable
 
 
 class CrimeGridInfo:
@@ -59,8 +59,11 @@ class CrimeGridInfo:
         df['cell'] = df.index
         return df
 
-    def generate_grid_dict(self, grid: np.array):
-        return dict(((j, i), grid[i][j]) for i in range(len(grid)) for j in range(len(grid[0])))
+    def generate_grid_dict(self, grid: np.array, threshold):
+        grid_dict = dict(((j, i), grid[i][j]) for i in range(len(grid)) for j in range(len(grid[0])))
+        for key in grid_dict:
+            grid_dict[key] = grid_dict[key] >= threshold
+        return grid_dict
 
     def generate_grid(self, threshold_percentage: int) -> Tuple[np.array, GridTopology]:
         # returns the modified data frame where the index is the cell coordinates(x, y) with the crime count as a column
