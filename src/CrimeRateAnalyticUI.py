@@ -198,14 +198,14 @@ class CrimeRateAnalyticUI:
         self._a_star.set_graph(self._graph)
         if self._start_node_id == -1 or self._end_node_id == -1:
             return
-        execution_time, path = self._a_star.find_path(self._start_node_id, self._end_node_id)
+        execution_time_ms, path = self._a_star.find_path(self._start_node_id, self._end_node_id)
         cost = 0
         if len(path) != 0:
             node: Node = path[-1]
             cost = node.g_score
 
-        new_text = f"{self._console_text_data} \n Total execution time to run A* {execution_time} " \
-                   f"\n Total cost was: {cost} "
+        new_text = f"{self._console_text_data} \nTotal execution time to run A* {execution_time_ms} ms " \
+                   f"\nTotal cost was: {cost} "
         self._console_text.set_text(new_text)
         self.__draw_path(path)
 

@@ -9,6 +9,7 @@ from typing import Tuple
 
 
 class GridTopology:
+    # used to hold topology information about the grid
     def __init__(self, bounding_box: np.array, threshold: int, max_crime_count: int,
                  grid_resolution: Tuple[float, float], bin_dimensions: Tuple[int, int]):
 

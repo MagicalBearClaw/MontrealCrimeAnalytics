@@ -21,6 +21,7 @@ class CrimeGridInfo:
         self.__partition_grid()
 
     def __calculate_bin_shape(self) -> Tuple[int, int]:
+        # calculate how many row and columns we need in the grid
         delta_x, delta_y = self.__get_bbox_dimensions()
         x_resolution, y_resolution = self.grid_resolution
         columns = np.ceil(delta_x / x_resolution)

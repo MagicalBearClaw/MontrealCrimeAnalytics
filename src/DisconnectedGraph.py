@@ -22,6 +22,8 @@ class DisconnectedGraph:
         self._grid = grid
 
     def build_graph_from_grid(self) -> Dict[int, Node]:
+        # build the graph by using a dictionary as the backing data structure.
+        # used handles(ids) as a keys to associate to a node.
         rows, columns = self._grid_topology.bin_dimensions
         boundaries = self._grid_topology.bounding_box[0], \
                                                   self._grid_topology.bounding_box[1], \
@@ -39,6 +41,10 @@ class DisconnectedGraph:
 
     def create_node_connections_for_cell(self, x: int, y: int,
                                          grid_boundaries: Tuple[float, float, float, float]) -> None:
+
+        # each cell has up to 4 nodes. we must create them if they are not already created. We also do bi-directional
+        # connections. We respect that we cannot two nodes that are on a boundary edge.
+
         x_min, y_min, x_max, y_max = grid_boundaries
         rows, columns = self._grid_topology.bin_dimensions
         res_x, res_y = self._grid_topology.grid_resolution
@@ -57,9 +63,11 @@ class DisconnectedGraph:
         # x and y because y represent the current column and x represent the row
         # in order to get the correct position we need to do this flip
 
+        # left bottom node
         if current_lb_node is None:
             current_lb_node = Node(current_lb_node_index)
             # create the current node
+            # calculate the nodes real coordinates
             left_bottom_corner_x = x_min + (y * res_x)
             left_bottom_corner_y = y_min + (x * res_y)
             current_lb_node.cod_x = left_bottom_corner_x
@@ -73,6 +81,7 @@ class DisconnectedGraph:
         if current_lt_node is None:
             current_lt_node = Node(current_lt_node_index)
             # create the current node
+            # calculate the nodes real coordinates
             left_bottom_corner_x = x_min + (y * res_x)
             left_bottom_corner_y = y_min + ((x + 1) * res_y)
             current_lt_node.cod_x = left_bottom_corner_x
@@ -86,6 +95,7 @@ class DisconnectedGraph:
         if current_rt_node is None:
             current_rt_node = Node(current_rt_node_index)
             # create the current node
+            # calculate the nodes real coordinates
             left_bottom_corner_x = x_min + ((y + 1) * res_x)
             left_bottom_corner_y = y_min + ((x + 1) * res_y)
             current_rt_node.cod_x = left_bottom_corner_x
@@ -169,6 +179,7 @@ class DisconnectedGraph:
         return self._node_dict.get(node_id)
 
     def __get_cell_from_point(self, grid_dimensions: Tuple[int, int], point: Tuple[float, float]):
+        # given a point get the current cell of that grid that it exists in.
         rows, columns = grid_dimensions
         delta_x, delta_y = self.__get_bbox_dimensions()
         bbox = self._grid_topology.bounding_box

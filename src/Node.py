@@ -3,8 +3,8 @@
 # Written by Michael McMahon - 26250912
 # For COMP 472 Section ABJX – Summer 2020
 # --------------------------------------------------------
-from typing import Tuple
 
+# Node class used by the DisconnectedGraph class
 
 class Node:
     def __init__(self, node_id: int = -1):

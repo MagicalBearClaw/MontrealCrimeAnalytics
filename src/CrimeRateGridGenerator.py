@@ -19,6 +19,7 @@ class CrimeRateInfoGenerator:
         self._bounding_box = None
 
     def initialize(self, file_name: str) -> None:
+        # add the shape file data to a data frame
         crime_dt_shape_file = shapefile.Reader(file_name, encoding='latin-1')
         self._bounding_box = crime_dt_shape_file.bbox
         crime_data_shape = [s.points[0] for s in crime_dt_shape_file.shapes()]
