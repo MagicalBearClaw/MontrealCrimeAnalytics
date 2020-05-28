@@ -6,5 +6,5 @@
 
 from src.CrimeRateAnalyticUI import CrimeRateAnalyticUI
 
-ui = CrimeRateAnalyticUI()
+ui = CrimeRateAnalyticUI(show_cell_count=False)
 ui.start_application()
