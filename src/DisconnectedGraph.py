@@ -52,11 +52,16 @@ class DisconnectedGraph:
         current_lb_node_index = (x * vertex_rows) + y
         current_lb_node = self._node_dict.get(current_lb_node_index)
         # the node does not exist so we need toc create it.
+
+        # when calculating the coordinates of the nodes when need to flip
+        # x and y because y represent the current column and x represent the row
+        # in order to get the correct position we need to do this flip
+
         if current_lb_node is None:
             current_lb_node = Node(current_lb_node_index)
             # create the current node
-            left_bottom_corner_x = x_min + (x * res_x)
-            left_bottom_corner_y = y_min + (y * res_y)
+            left_bottom_corner_x = x_min + (y * res_x)
+            left_bottom_corner_y = y_min + (x * res_y)
             current_lb_node.cod_x = left_bottom_corner_x
             current_lb_node.cod_y = left_bottom_corner_y
             self._node_dict[current_lb_node_index] = current_lb_node
@@ -68,8 +73,8 @@ class DisconnectedGraph:
         if current_lt_node is None:
             current_lt_node = Node(current_lt_node_index)
             # create the current node
-            left_bottom_corner_x = x_min + (x * res_x)
-            left_bottom_corner_y = y_min + ((y + 1) * res_y)
+            left_bottom_corner_x = x_min + (y * res_x)
+            left_bottom_corner_y = y_min + ((x + 1) * res_y)
             current_lt_node.cod_x = left_bottom_corner_x
             current_lt_node.cod_y = left_bottom_corner_y
             self._node_dict[current_lt_node_index] = current_lt_node
@@ -81,8 +86,8 @@ class DisconnectedGraph:
         if current_rt_node is None:
             current_rt_node = Node(current_rt_node_index)
             # create the current node
-            left_bottom_corner_x = x_min + (x * res_x)
-            left_bottom_corner_y = y_min + ((y + 1) * res_y)
+            left_bottom_corner_x = x_min + ((y + 1) * res_x)
+            left_bottom_corner_y = y_min + ((x + 1) * res_y)
             current_rt_node.cod_x = left_bottom_corner_x
             current_rt_node.cod_y = left_bottom_corner_y
             self._node_dict[current_rt_node_index] = current_rt_node
@@ -94,8 +99,8 @@ class DisconnectedGraph:
         if current_rb_node is None:
             current_rb_node = Node(current_rb_node_index)
             # create the current node
-            left_bottom_corner_x = x_min + (x * res_x)
-            left_bottom_corner_y = y_min + ((y + 1) * res_y)
+            left_bottom_corner_x = x_min + ((y + 1) * res_x)
+            left_bottom_corner_y = y_min + (x * res_y)
             current_rb_node.cod_x = left_bottom_corner_x
             current_rb_node.cod_y = left_bottom_corner_y
             self._node_dict[current_rb_node_index] = current_rb_node
@@ -159,12 +164,6 @@ class DisconnectedGraph:
                 current_lt_node.connect_to_node(self._edge_weight, current_rt_node_index)
             if not current_rt_node.is_connected_to(current_lt_node_index):
                 current_rt_node.connect_to_node(self._edge_weight, current_lt_node_index)
-
-
-
-
-
-
 
     def get_node(self, node_id: int):
         return self._node_dict.get(node_id)

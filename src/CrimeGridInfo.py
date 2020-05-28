@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from src.GridTopology import GridTopology
-from typing import Tuple, List, Iterable
+from typing import Tuple, List
 
 
 class CrimeGridInfo:
