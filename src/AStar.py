@@ -121,7 +121,7 @@ class AStar:
     def __calculate_h_score(self, current: Node, goal: Node, current_weight) -> float:
         # perform a diagonal heuristic
         abs_delta_x = abs(current.cod_x - goal.cod_x)
-        abs_delta_y = abs(current.cod_x - goal.cod_x)
+        abs_delta_y = abs(current.cod_y - goal.cod_y)
         d_min = min(abs_delta_x, abs_delta_y)
         d_max = max(abs_delta_x, abs_delta_y)
         h_score = 1.5 * d_min + (current_weight * (d_max - d_min))

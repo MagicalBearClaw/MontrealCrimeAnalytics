@@ -78,6 +78,7 @@ class CrimeRateAnalyticUI:
                 self._cell_count_text_list.append(text)
 
     def __get_cell_center(self, cell: Tuple[int, int]):
+        # get the center point of a given cell.
         x, y = cell
         res_x, res_y = self._grid_topology.grid_resolution
         x_min, y_min = self._grid_topology.bounding_box[0], self._grid_topology.bounding_box[1]
@@ -176,14 +177,14 @@ class CrimeRateAnalyticUI:
         self._fig.canvas.draw()
 
     def __clear_point_on_grid(self):
-        if self._start_path_circle is not None:
+        if self._start_node_id != -1:
             self._start_path_circle.remove()
             self._start_path_circle = None
-        if self._end_path_circle is not None:
+            self._start_node_id = -1
+        if self._end_node_id != -1:
             self._end_path_circle.remove()
             self._end_path_circle = None
-        self._start_node_id = -1
-        self._end_node_id = -1
+            self._end_node_id = -1
 
     def __update_grid(self, grid_resolution: Tuple[float, float], threshold: int) -> None:
         self.crime_grid_info = self._crime_rate_info_generator.create_crime_grid_info(grid_resolution)
@@ -232,6 +233,7 @@ class CrimeRateAnalyticUI:
 
     def __calculate_coordinates_from_cell(self, cell: Tuple[int, int], raw_point: Tuple[float, float]) \
             -> Tuple[int, Tuple[float, float]]:
+        # for a given cell find the closet corner relative to the clicked position.
         x, y = cell
         res_x, res_y = self._grid_topology.grid_resolution
         rows,_ = self._grid_topology.bin_dimensions
