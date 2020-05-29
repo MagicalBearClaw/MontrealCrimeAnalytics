@@ -147,9 +147,9 @@ class DisconnectedGraph:
             if self._grid[x - 1, y] >= self._grid_topology.threshold:
                 weight = self._shared_edge_weight
             if not current_lb_node.is_connected_to(current_rb_node_index):
-                current_lb_node.connect_to_node(self._edge_weight, current_rb_node_index)
+                current_lb_node.connect_to_node(weight, current_rb_node_index)
             if not current_rb_node.is_connected_to(current_lb_node_index):
-                current_rb_node.connect_to_node(self._edge_weight, current_lb_node_index)
+                current_rb_node.connect_to_node(weight, current_lb_node_index)
 
         # right -> left and we are not at the right edge of the grid
         # if we are at len(columns) - 1 we can not process the right edge of the grid.
@@ -159,9 +159,9 @@ class DisconnectedGraph:
             if self._grid[x, y + 1] >= self._grid_topology.threshold:
                 weight = self._shared_edge_weight
             if not current_rb_node.is_connected_to(current_rt_node_index):
-                current_rb_node.connect_to_node(self._edge_weight, current_rt_node_index)
+                current_rb_node.connect_to_node(weight, current_rt_node_index)
             if not current_rt_node.is_connected_to(current_rb_node_index):
-                current_rt_node.connect_to_node(self._edge_weight, current_rb_node_index)
+                current_rt_node.connect_to_node(weight, current_rb_node_index)
 
         # top -> bottom and we are not at the top edge of the grid
         # if we are at len(rows) - 1 we can not process the top edge of the grid.
@@ -171,9 +171,9 @@ class DisconnectedGraph:
             if self._grid[x + 1, y] >= self._grid_topology.threshold:
                 weight = self._shared_edge_weight
             if not current_lt_node.is_connected_to(current_rt_node_index):
-                current_lt_node.connect_to_node(self._edge_weight, current_rt_node_index)
+                current_lt_node.connect_to_node(weight, current_rt_node_index)
             if not current_rt_node.is_connected_to(current_lt_node_index):
-                current_rt_node.connect_to_node(self._edge_weight, current_lt_node_index)
+                current_rt_node.connect_to_node(weight, current_lt_node_index)
 
     def get_node(self, node_id: int):
         return self._node_dict.get(node_id)
